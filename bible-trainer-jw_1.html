@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Bible Trainer — JW</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #08111e;
+  --surface: #0e1f35;
+  --surface2: #162b47;
+  --surface3: #1e3a5f;
+  --gold: #c9a54a;
+  --gold-light: #e3c97a;
+  --gold-dim: #7d6530;
+  --red: #e05555;
+  --text: #e8dfd0;
+  --text-muted: #7a9ab5;
+  --text-dim: #3a5870;
+  --border: rgba(201,165,74,0.15);
+  --border-strong: rgba(201,165,74,0.3);
+  --radius: 16px;
+  --radius-sm: 10px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;overflow-x:hidden;}
+#app{display:flex;flex-direction:column;height:100%;max-width:480px;margin:0 auto;position:relative;}
+
+/* Screens */
+.screen{flex:1;overflow-y:auto;padding-bottom:80px;display:none;}
+.screen.active{display:block;}
+.screen::-webkit-scrollbar{width:0;}
+
+/* Header */
+.app-header{
+  padding:52px 24px 16px;
+  background:linear-gradient(180deg,rgba(8,17,30,0.97) 70%,transparent 100%);
+  position:sticky;top:0;z-index:10;
+  backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+}
+.header-label{font-size:10.5px;letter-spacing:2.5px;text-transform:uppercase;color:var(--gold);font-weight:500;}
+.header-title{font-family:'Playfair Display',serif;font-size:27px;font-weight:600;color:var(--text);line-height:1.2;margin-top:3px;}
+.header-title em{color:var(--gold);font-style:italic;}
+
+/* Bottom nav */
+.bottom-nav{
+  position:fixed;bottom:0;left:50%;transform:translateX(-50%);
+  width:100%;max-width:480px;
+  background:rgba(10,20,38,0.97);
+  backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+  border-top:1px solid var(--border);
+  display:flex;padding:8px 0 20px;z-index:100;
+}
+.nav-btn{
+  flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;
+  padding:8px 4px;cursor:pointer;transition:all 0.2s;
+  color:var(--text-dim);font-size:10.5px;font-weight:500;
+  background:none;border:none;font-family:'DM Sans',sans-serif;
+}
+.nav-icon{font-size:21px;transition:transform 0.2s;}
+.nav-btn.active{color:var(--gold);}
+.nav-btn.active .nav-icon{transform:translateY(-2px);}
+
+/* Cards */
+.card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius);padding:20px;
+  margin:0 16px 12px;
+}
+.card-accent{
+  background:linear-gradient(135deg,var(--surface2) 0%,var(--surface) 100%);
+  border-color:var(--border-strong);
+}
+
+/* Buttons */
+.btn-primary{
+  background:var(--gold);color:#0a1020;border:none;
+  border-radius:var(--radius-sm);padding:12px 22px;
+  font-family:'DM Sans',sans-serif;font-weight:500;font-size:14px;
+  cursor:pointer;transition:all 0.2s;
+  display:inline-flex;align-items:center;gap:8px;text-decoration:none;
+}
+.btn-primary:hover{background:var(--gold-light);transform:translateY(-1px);}
+.btn-primary:active{transform:translateY(0);}
+
+.btn-outline{
+  background:transparent;color:var(--gold);
+  border:1px solid var(--border-strong);
+  border-radius:var(--radius-sm);padding:10px 18px;
+  font-family:'DM Sans',sans-serif;font-weight:400;font-size:14px;
+  cursor:pointer;transition:all 0.2s;
+  display:inline-flex;align-items:center;gap:6px;text-decoration:none;
+}
+.btn-outline:hover{background:rgba(201,165,74,0.08);}
+
+/* Plan cards */
+.plan-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius);padding:20px;
+  margin:0 16px 12px;cursor:pointer;transition:all 0.25s;
+  position:relative;overflow:hidden;
+}
+.plan-card::before{
+  content:'';position:absolute;left:0;top:0;bottom:0;width:3px;
+  background:var(--gold);opacity:0;transition:opacity 0.2s;
+}
+.plan-card:hover::before,.plan-card.selected::before{opacity:1;}
+.plan-card:hover{border-color:var(--border-strong);transform:translateX(4px);}
+.plan-card.selected{border-color:var(--border-strong);background:var(--surface2);}
+.plan-title{font-family:'Playfair Display',serif;font-size:18px;font-weight:600;margin-bottom:4px;}
+.plan-desc{font-size:13px;color:var(--text-muted);line-height:1.55;}
+.plan-meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;}
+.plan-tag{
+  font-size:11px;font-weight:500;letter-spacing:0.5px;
+  background:rgba(201,165,74,0.1);color:var(--gold);
+  border:1px solid rgba(201,165,74,0.2);padding:3px 10px;border-radius:20px;
+}
+
+/* Reading list */
+.reading-item{
+  display:flex;align-items:center;gap:12px;
+  padding:12px 0;border-bottom:1px solid var(--border);
+}
+.reading-item:last-child{border-bottom:none;}
+.reading-ref{flex:1;}
+.reading-ref .book-name{font-weight:500;font-size:15px;}
+.reading-ref .chap-num{font-size:12.5px;color:var(--text-muted);}
+.reading-links{display:flex;gap:8px;}
+
+/* Progress bar */
+.progress-wrap{background:var(--surface2);border-radius:4px;height:4px;overflow:hidden;}
+.progress-bar{height:100%;background:var(--gold);border-radius:4px;transition:width 0.6s ease;}
+
+/* Badge */
+.badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:500;padding:2px 9px;border-radius:20px;}
+.badge-active{background:rgba(201,165,74,0.15);color:var(--gold);}
+.badge-done{background:rgba(78,203,160,0.15);color:#4ecba0;}
+.badge-grey{background:rgba(255,255,255,0.07);color:var(--text-muted);}
+
+/* Section title */
+.section-title{
+  font-size:10.5px;letter-spacing:2.5px;text-transform:uppercase;
+  color:var(--gold-dim);font-weight:500;padding:16px 16px 8px;
+}
+
+/* Icon link buttons */
+.icon-link{
+  width:36px;height:36px;border:1px solid var(--border);border-radius:9px;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;background:var(--surface2);
+  transition:all 0.2s;text-decoration:none;color:var(--text-muted);
+}
+.icon-link:hover{border-color:var(--border-strong);color:var(--gold);}
+.icon-link svg{width:17px;height:17px;}
+
+/* Stats */
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:0 16px;margin-bottom:12px;}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:16px;}
+.stat-num{font-family:'Playfair Display',serif;font-size:30px;font-weight:600;color:var(--gold);}
+.stat-label{font-size:11.5px;color:var(--text-muted);margin-top:2px;}
+
+/* Verse card */
+.verse-card{
+  margin:0 16px 12px;
+  background:linear-gradient(135deg,#16355a 0%,#0e2440 100%);
+  border:1px solid rgba(201,165,74,0.25);
+  border-radius:var(--radius);padding:24px;
+  position:relative;overflow:hidden;
+}
+.verse-card::after{
+  content:'"';position:absolute;right:14px;bottom:-28px;
+  font-family:'Playfair Display',serif;font-size:150px;font-style:italic;
+  color:rgba(201,165,74,0.07);line-height:1;pointer-events:none;
+}
+.verse-text{font-family:'Playfair Display',serif;font-style:italic;font-size:15.5px;line-height:1.75;color:var(--text);}
+.verse-ref{font-size:11.5px;color:var(--gold);margin-top:10px;font-weight:500;}
+
+/* Check button */
+.check-btn{
+  width:28px;height:28px;border-radius:50%;
+  border:2px solid var(--border-strong);background:transparent;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  transition:all 0.2s;flex-shrink:0;
+}
+.check-btn.done{background:var(--gold);border-color:var(--gold);}
+.check-btn svg{width:13px;height:13px;opacity:0;transition:opacity 0.15s;}
+.check-btn.done svg{opacity:1;}
+
+/* Empty state */
+.empty-state{text-align:center;padding:64px 28px;}
+.empty-icon{font-size:52px;margin-bottom:16px;opacity:0.35;}
+.empty-state h3{font-family:'Playfair Display',serif;font-size:21px;margin-bottom:8px;}
+.empty-state p{font-size:13.5px;color:var(--text-muted);line-height:1.65;}
+
+/* Settings */
+.settings-row{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:15px 20px;border-bottom:1px solid var(--border);
+}
+.settings-row:last-child{border-bottom:none;}
+.settings-label{font-size:14px;}
+.settings-sub{font-size:11.5px;color:var(--text-muted);margin-top:2px;}
+.settings-value{font-size:13px;color:var(--text-muted);text-decoration:none;}
+.settings-value:hover{color:var(--gold);}
+
+/* Toggle switch */
+.toggle{position:relative;width:44px;height:24px;flex-shrink:0;}
+.toggle input{opacity:0;width:0;height:0;}
+.toggle-slider{
+  position:absolute;inset:0;background:var(--surface3);
+  border-radius:12px;transition:0.3s;cursor:pointer;
+}
+.toggle-slider::before{
+  content:'';position:absolute;height:18px;width:18px;
+  left:3px;bottom:3px;background:var(--text-muted);
+  border-radius:50%;transition:0.3s;
+}
+input:checked+.toggle-slider{background:var(--gold-dim);}
+input:checked+.toggle-slider::before{transform:translateX(20px);background:var(--gold);}
+
+/* Animations */
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);}}
+.card,.plan-card,.verse-card,.stat-card{animation:fadeUp 0.38s ease both;}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- HOME -->
+  <div class="screen active" id="screen-home">
+    <div class="app-header">
+      <div class="header-label" id="today-date-label"></div>
+      <div class="header-title">Bonjour, <em>lecteur</em> 👋</div>
+    </div>
+    <div id="home-content"></div>
+  </div>
+
+  <!-- PLANS -->
+  <div class="screen" id="screen-plans">
+    <div class="app-header">
+      <div class="header-label">Programmes</div>
+      <div class="header-title">Choisir un <em>plan</em></div>
+    </div>
+    <div id="plans-list"></div>
+  </div>
+
+  <!-- PROGRESS -->
+  <div class="screen" id="screen-progress">
+    <div class="app-header">
+      <div class="header-label">Statistiques</div>
+      <div class="header-title">Ma <em>progression</em></div>
+    </div>
+    <div id="progress-content"></div>
+  </div>
+
+  <!-- SETTINGS -->
+  <div class="screen" id="screen-settings">
+    <div class="app-header">
+      <div class="header-label">Paramètres</div>
+      <div class="header-title">Réglages</div>
+    </div>
+    <div id="settings-content"></div>
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <nav class="bottom-nav">
+    <button class="nav-btn active" id="nav-home" onclick="showScreen('home')">
+      <span class="nav-icon">🏠</span><span>Accueil</span>
+    </button>
+    <button class="nav-btn" id="nav-plans" onclick="showScreen('plans')">
+      <span class="nav-icon">📖</span><span>Plans</span>
+    </button>
+    <button class="nav-btn" id="nav-progress" onclick="showScreen('progress')">
+      <span class="nav-icon">📊</span><span>Progrès</span>
+    </button>
+    <button class="nav-btn" id="nav-settings" onclick="showScreen('settings')">
+      <span class="nav-icon">⚙️</span><span>Réglages</span>
+    </button>
+  </nav>
+</div>
+
+<script>
+// ════════════════════════════════════════════════
+// DONNÉES — 66 livres bibliques
+// ════════════════════════════════════════════════
+const BOOKS = [
+  {id:1,  name:"Genèse",                  abbr:"Gn",  chapters:50,  slug:"genese"},
+  {id:2,  name:"Exode",                   abbr:"Ex",  chapters:40,  slug:"exode"},
+  {id:3,  name:"Lévitique",               abbr:"Lv",  chapters:27,  slug:"levitique"},
+  {id:4,  name:"Nombres",                 abbr:"Nb",  chapters:36,  slug:"nombres"},
+  {id:5,  name:"Deutéronome",             abbr:"Dt",  chapters:34,  slug:"deuteronome"},
+  {id:6,  name:"Josué",                   abbr:"Jos", chapters:24,  slug:"josue"},
+  {id:7,  name:"Juges",                   abbr:"Jg",  chapters:21,  slug:"juges"},
+  {id:8,  name:"Ruth",                    abbr:"Ru",  chapters:4,   slug:"ruth"},
+  {id:9,  name:"1 Samuel",                abbr:"1S",  chapters:31,  slug:"1-samuel"},
+  {id:10, name:"2 Samuel",                abbr:"2S",  chapters:24,  slug:"2-samuel"},
+  {id:11, name:"1 Rois",                  abbr:"1R",  chapters:22,  slug:"1-rois"},
+  {id:12, name:"2 Rois",                  abbr:"2R",  chapters:25,  slug:"2-rois"},
+  {id:13, name:"1 Chroniques",            abbr:"1Ch", chapters:29,  slug:"1-chroniques"},
+  {id:14, name:"2 Chroniques",            abbr:"2Ch", chapters:36,  slug:"2-chroniques"},
+  {id:15, name:"Esdras",                  abbr:"Esd", chapters:10,  slug:"esdras"},
+  {id:16, name:"Néhémie",                 abbr:"Né",  chapters:13,  slug:"nehemie"},
+  {id:17, name:"Esther",                  abbr:"Est", chapters:10,  slug:"esther"},
+  {id:18, name:"Job",                     abbr:"Job", chapters:42,  slug:"job"},
+  {id:19, name:"Psaumes",                 abbr:"Ps",  chapters:150, slug:"psaumes"},
+  {id:20, name:"Proverbes",               abbr:"Pr",  chapters:31,  slug:"proverbes"},
+  {id:21, name:"Ecclésiaste",             abbr:"Ec",  chapters:12,  slug:"ecclesiaste"},
+  {id:22, name:"Cantique des Cantiques",  abbr:"Ct",  chapters:8,   slug:"cantique-des-cantiques"},
+  {id:23, name:"Isaïe",                   abbr:"Is",  chapters:66,  slug:"isaie"},
+  {id:24, name:"Jérémie",                 abbr:"Jr",  chapters:52,  slug:"jeremie"},
+  {id:25, name:"Lamentations",            abbr:"Lm",  chapters:5,   slug:"lamentations"},
+  {id:26, name:"Ézéchiel",                abbr:"Éz",  chapters:48,  slug:"ezechiel"},
+  {id:27, name:"Daniel",                  abbr:"Dn",  chapters:12,  slug:"daniel"},
+  {id:28, name:"Osée",                    abbr:"Os",  chapters:14,  slug:"osee"},
+  {id:29, name:"Joël",                    abbr:"Jl",  chapters:3,   slug:"joel"},
+  {id:30, name:"Amos",                    abbr:"Am",  chapters:9,   slug:"amos"},
+  {id:31, name:"Abdias",                  abbr:"Ab",  chapters:1,   slug:"abdias"},
+  {id:32, name:"Jonas",                   abbr:"Jon", chapters:4,   slug:"jonas"},
+  {id:33, name:"Michée",                  abbr:"Mi",  chapters:7,   slug:"michee"},
+  {id:34, name:"Nahoum",                  abbr:"Na",  chapters:3,   slug:"nahoum"},
+  {id:35, name:"Habacuc",                 abbr:"Ha",  chapters:3,   slug:"habacuc"},
+  {id:36, name:"Sophonie",                abbr:"So",  chapters:3,   slug:"sophonie"},
+  {id:37, name:"Aggée",                   abbr:"Ag",  chapters:2,   slug:"aggee"},
+  {id:38, name:"Zacharie",                abbr:"Za",  chapters:14,  slug:"zacharie"},
+  {id:39, name:"Malachie",               abbr:"Ml",  chapters:4,   slug:"malachie"},
+  {id:40, name:"Matthieu",               abbr:"Mt",  chapters:28,  slug:"matthieu"},
+  {id:41, name:"Marc",                   abbr:"Mc",  chapters:16,  slug:"marc"},
+  {id:42, name:"Luc",                    abbr:"Lc",  chapters:24,  slug:"luc"},
+  {id:43, name:"Jean",                   abbr:"Jn",  chapters:21,  slug:"jean"},
+  {id:44, name:"Actes",                  abbr:"Ac",  chapters:28,  slug:"actes"},
+  {id:45, name:"Romains",                abbr:"Ro",  chapters:16,  slug:"romains"},
+  {id:46, name:"1 Corinthiens",          abbr:"1Co", chapters:16,  slug:"1-corinthiens"},
+  {id:47, name:"2 Corinthiens",          abbr:"2Co", chapters:13,  slug:"2-corinthiens"},
+  {id:48, name:"Galates",               abbr:"Ga",  chapters:6,   slug:"galates"},
+  {id:49, name:"Éphésiens",             abbr:"Ép",  chapters:6,   slug:"ephesiens"},
+  {id:50, name:"Philippiens",           abbr:"Ph",  chapters:4,   slug:"philippiens"},
+  {id:51, name:"Colossiens",            abbr:"Col", chapters:4,   slug:"colossiens"},
+  {id:52, name:"1 Thessaloniciens",     abbr:"1Th", chapters:5,   slug:"1-thessaloniciens"},
+  {id:53, name:"2 Thessaloniciens",     abbr:"2Th", chapters:3,   slug:"2-thessaloniciens"},
+  {id:54, name:"1 Timothée",            abbr:"1Ti", chapters:6,   slug:"1-timothee"},
+  {id:55, name:"2 Timothée",            abbr:"2Ti", chapters:4,   slug:"2-timothee"},
+  {id:56, name:"Tite",                  abbr:"Tt",  chapters:3,   slug:"tite"},
+  {id:57, name:"Philémon",              abbr:"Phm", chapters:1,   slug:"philemon"},
+  {id:58, name:"Hébreux",              abbr:"Hé",  chapters:13,  slug:"hebreux"},
+  {id:59, name:"Jacques",              abbr:"Jc",  chapters:5,   slug:"jacques"},
+  {id:60, name:"1 Pierre",             abbr:"1P",  chapters:5,   slug:"1-pierre"},
+  {id:61, name:"2 Pierre",             abbr:"2P",  chapters:3,   slug:"2-pierre"},
+  {id:62, name:"1 Jean",               abbr:"1Jn", chapters:5,   slug:"1-jean"},
+  {id:63, name:"2 Jean",               abbr:"2Jn", chapters:1,   slug:"2-jean"},
+  {id:64, name:"3 Jean",               abbr:"3Jn", chapters:1,   slug:"3-jean"},
+  {id:65, name:"Jude",                 abbr:"Jd",  chapters:1,   slug:"jude"},
+  {id:66, name:"Révélation",           abbr:"Rv",  chapters:22,  slug:"revelation"},
+];
+
+// Ordre canonique — liste de tous les chapitres
+function buildChapterList(bookIds) {
+  const list = [];
+  const src = bookIds ? BOOKS.filter(b => bookIds.includes(b.id)) : BOOKS;
+  for (const book of src) {
+    for (let c = 1; c <= book.chapters; c++) {
+      list.push({bookId: book.id, chapter: c});
+    }
+  }
+  return list;
+}
+
+const NT_IDS = [40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66];
+const OT_IDS = BOOKS.filter(b => b.id < 40).map(b => b.id);
+
+const ALL_CH  = buildChapterList(null);       // 1 189 chapitres
+const NT_CH   = buildChapterList(NT_IDS);     // 260
+const OT_CH   = buildChapterList(OT_IDS);     // 929
+
+// ════════════════════════════════════════════════
+// PLANS DE LECTURE
+// ════════════════════════════════════════════════
+const PLANS = [
+  {
+    id: 'bible-1an',
+    name: 'Bible en 1 an',
+    emoji: '📖',
+    desc: 'Lisez toute la Bible en ordre canonique en 365 jours, environ 4 chapitres par jour.',
+    tags: ['365 jours', '~4 chap/jour', 'AT + NT'],
+    totalDays: 365,
+    chapters: ALL_CH,
+  },
+  {
+    id: 'bible-2ans',
+    name: 'Bible en 2 ans',
+    emoji: '🕊️',
+    desc: 'Un rythme doux pour méditer chaque passage en profondeur sur 730 jours.',
+    tags: ['730 jours', '~2 chap/jour', 'AT + NT'],
+    totalDays: 730,
+    chapters: ALL_CH,
+  },
+  {
+    id: 'nt-90j',
+    name: 'Nouveau Testament 90 jours',
+    emoji: '✝️',
+    desc: 'Parcourez les 27 livres du Nouveau Testament en 3 mois.',
+    tags: ['90 jours', '~3 chap/jour', 'NT uniquement'],
+    totalDays: 90,
+    chapters: NT_CH,
+  },
+  {
+    id: 'ot-1an',
+    name: 'Ancien Testament 1 an',
+    emoji: '✡️',
+    desc: 'Explorez l\'intégralité de l\'Ancien Testament en 365 jours.',
+    tags: ['365 jours', '~3 chap/jour', 'AT uniquement'],
+    totalDays: 365,
+    chapters: OT_CH,
+  },
+  {
+    id: 'daily-text',
+    name: 'Texte du Jour',
+    emoji: '🌅',
+    desc: 'Commencez chaque journée avec le texte du jour de JW.org. Idéal en complément d\'un autre plan.',
+    tags: ['Quotidien', 'JW.org', 'Court'],
+    totalDays: 365,
+    chapters: null,
+  },
+];
+
+// Chapitres à lire pour le jour N (base 0)
+function getChaptersForDay(plan, dayIndex) {
+  if (!plan.chapters) return null;
+  const total = plan.chapters.length;
+  const perDay = total / plan.totalDays;
+  const start = Math.floor(dayIndex * perDay);
+  const end   = Math.min(Math.floor((dayIndex + 1) * perDay), total);
+  return plan.chapters.slice(start, end);
+}
+
+// URLs
+function jwOrgUrl(slug, chapter) {
+  return `https://www.jw.org/fr/bibliotheque/bible/nwt/livres/${slug}/${chapter}/`;
+}
+function jwLibraryUrl(bookId, chapter) {
+  // Lien profond JW Library (iOS / Android)
+  return `jwlibrary:///catalog?item=bible&bookNumber=${bookId}&chapterNumber=${chapter}`;
+}
+
+// ════════════════════════════════════════════════
+// ÉTAT DE L'APPLICATION
+// ════════════════════════════════════════════════
+let state = {
+  activePlanId: null,
+  startDate: null,
+  openInApp: false,
+  completed: {},
+  // Structure : { [planId]: { [dayIndex]: [chapIndexes...] } }
+};
+
+function saveState() {
+  localStorage.setItem('bibletrainer_v1', JSON.stringify(state));
+}
+function loadState() {
+  try {
+    const s = JSON.parse(localStorage.getItem('bibletrainer_v1'));
+    if (s) Object.assign(state, s);
+  } catch(_) {}
+}
+
+function getActivePlan() {
+  return PLANS.find(p => p.id === state.activePlanId) || null;
+}
+
+function getDayIndex() {
+  if (!state.startDate) return 0;
+  const diff = Math.floor((Date.now() - new Date(state.startDate)) / 86400000);
+  return Math.max(0, diff);
+}
+
+function getProgressRatio(plan) {
+  if (!plan || !plan.chapters) return 0;
+  let done = 0;
+  const comp = state.completed[plan.id] || {};
+  for (const arr of Object.values(comp)) done += arr.length;
+  return done / plan.chapters.length;
+}
+
+function isChapDone(planId, dayIdx, chapIdx) {
+  return !!(state.completed?.[planId]?.[dayIdx]?.includes(chapIdx));
+}
+
+function toggleChap(planId, dayIdx, chapIdx) {
+  if (!state.completed[planId]) state.completed[planId] = {};
+  if (!state.completed[planId][dayIdx]) state.completed[planId][dayIdx] = [];
+  const arr = state.completed[planId][dayIdx];
+  const i = arr.indexOf(chapIdx);
+  if (i === -1) arr.push(chapIdx); else arr.splice(i, 1);
+  saveState();
+  renderHome();
+  renderProgress();
+}
+
+function selectPlan(planId) {
+  state.activePlanId = planId;
+  if (!state.startDate) state.startDate = new Date().toISOString().slice(0, 10);
+  saveState();
+  renderAll();
+  showScreen('home');
+}
+
+// ════════════════════════════════════════════════
+// RENDU — ACCUEIL
+// ════════════════════════════════════════════════
+function renderHome() {
+  const el = document.getElementById('home-content');
+  const now = new Date();
+  document.getElementById('today-date-label').textContent =
+    now.toLocaleDateString('fr-FR', {weekday:'long', day:'numeric', month:'long'});
+
+  const plan = getActivePlan();
+
+  if (!plan) {
+    el.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">📖</div>
+        <h3>Aucun plan actif</h3>
+        <p>Choisissez un plan de lecture pour commencer votre voyage à travers les Saintes Écritures.</p>
+        <br><br>
+        <button class="btn-primary" onclick="showScreen('plans')">Choisir un plan →</button>
+      </div>`;
+    return;
+  }
+
+  const dayIdx    = getDayIndex();
+  const progress  = getProgressRatio(plan);
+  const pct       = (progress * 100).toFixed(1);
+  const daysLeft  = Math.max(0, plan.totalDays - dayIdx);
+  const chapters  = getChaptersForDay(plan, dayIdx);
+  const dailyUrl  = 'https://www.jw.org/fr/enseignements-bibliques/texte-du-jour/';
+
+  // Verset inspirant (peut être remplacé par une API)
+  const verses = [
+    {text:"Que ce livre de la Loi ne s'éloigne pas de ta bouche ; médites-y jour et nuit...", ref:"Josué 1:8"},
+    {text:"Toute Écriture est inspirée de Dieu et utile pour enseigner, reprendre, corriger et instruire dans la justice.", ref:"2 Timothée 3:16"},
+    {text:"La lampe de mes pieds, c'est ta parole, et la lumière de mon sentier.", ref:"Psaumes 119:105"},
+    {text:"L'herbe sèche, la fleur se fane, mais la parole de notre Dieu subsiste à toujours.", ref:"Isaïe 40:8"},
+  ];
+  const verse = verses[dayIdx % verses.length];
+
+  let html = `
+    <div class="verse-card">
+      <p class="verse-text">${verse.text}</p>
+      <div class="verse-ref">${verse.ref}</div>
+    </div>
+
+    <div class="section-title">Plan actif</div>
+    <div class="card card-accent" style="animation-delay:0.08s">
+      <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:14px">
+        <div>
+          <div style="font-size:22px;margin-bottom:4px">${plan.emoji}</div>
+          <div style="font-family:'Playfair Display',serif;font-size:17px;font-weight:600">${plan.name}</div>
+          <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Jour ${dayIdx + 1} sur ${plan.totalDays}</div>
+        </div>
+        <span class="badge badge-active">En cours</span>
+      </div>
+      <div class="progress-wrap" style="margin-bottom:6px">
+        <div class="progress-bar" style="width:${pct}%"></div>
+      </div>
+      <div style="font-size:11.5px;color:var(--text-muted)">${pct}% terminé · ${daysLeft} jours restants</div>
+    </div>`;
+
+  if (plan.id === 'daily-text') {
+    html += `
+      <div class="section-title">Aujourd'hui</div>
+      <div class="card" style="animation-delay:0.16s">
+        <p style="font-size:13.5px;color:var(--text-muted);margin-bottom:18px">
+          Ouvrez le texte du jour directement sur JW.org ou dans l'application JW Library.
+        </p>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <a href="${dailyUrl}" target="_blank" class="btn-primary">🌐 Ouvrir sur JW.org</a>
+          <a href="jwlibrary:///" class="btn-outline">📱 JW Library</a>
+        </div>
+      </div>`;
+  } else if (chapters && chapters.length > 0) {
+    html += `<div class="section-title">Lecture du jour — ${chapters.length} chapitre${chapters.length>1?'s':''}</div>`;
+    html += `<div class="card" style="animation-delay:0.16s;padding:12px 20px">`;
+    chapters.forEach((chap, i) => {
+      const book = BOOKS.find(b => b.id === chap.bookId);
+      const done = isChapDone(plan.id, dayIdx, i);
+      const webUrl = jwOrgUrl(book.slug, chap.chapter);
+      const appUrl = jwLibraryUrl(book.id, chap.chapter);
+      html += `
+        <div class="reading-item">
+          <button class="check-btn ${done?'done':''}" onclick="toggleChap('${plan.id}',${dayIdx},${i})" title="${done?'Marquer non lu':'Marquer comme lu'}">
+            <svg viewBox="0 0 16 16" fill="none">
+              <polyline points="2,8 6,12 14,4" stroke="${done?'#0a1020':'var(--gold)'}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+          <div class="reading-ref" style="${done?'opacity:0.45;text-decoration:line-through':''}">
+            <div class="book-name">${book.name}</div>
+            <div class="chap-num">Chapitre ${chap.chapter}</div>
+          </div>
+          <div class="reading-links">
+            <a href="${webUrl}" target="_blank" class="icon-link" title="Lire sur JW.org">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <circle cx="12" cy="12" r="10"/>
+                <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+              </svg>
+            </a>
+            <a href="${appUrl}" class="icon-link" title="Ouvrir dans JW Library">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <rect x="3" y="3" width="18" height="18" rx="3"/>
+                <path d="M8 7h8M8 12h8M8 17h5"/>
+              </svg>
+            </a>
+          </div>
+        </div>`;
+    });
+    html += `</div>`;
+
+    // Texte du jour en bonus
+    html += `
+      <div class="section-title">Bonus du jour</div>
+      <div class="card" style="animation-delay:0.24s">
+        <div style="display:flex;align-items:center;gap:14px">
+          <span style="font-size:30px">🌅</span>
+          <div style="flex:1">
+            <div style="font-weight:500;margin-bottom:2px">Texte du Jour</div>
+            <div style="font-size:12px;color:var(--text-muted)">Une pensée biblique pour commencer la journée</div>
+          </div>
+          <a href="${dailyUrl}" target="_blank" class="btn-outline" style="white-space:nowrap;padding:8px 14px;font-size:13px">Lire →</a>
+        </div>
+      </div>`;
+  } else {
+    html += `
+      <div class="card" style="animation-delay:0.16s">
+        <p style="font-size:13.5px;color:var(--text-muted);text-align:center;padding:12px 0">
+          🎉 Plan terminé ! Félicitations pour votre persévérance.
+        </p>
+      </div>`;
+  }
+
+  el.innerHTML = html;
+}
+
+// ════════════════════════════════════════════════
+// RENDU — PLANS
+// ════════════════════════════════════════════════
+function renderPlans() {
+  const el = document.getElementById('plans-list');
+  let html = `<p style="font-size:13px;color:var(--text-muted);padding:4px 16px 12px;line-height:1.6">
+    Sélectionnez un programme de lecture. Votre progression est sauvegardée automatiquement.
+  </p>`;
+  PLANS.forEach((plan, i) => {
+    const active  = plan.id === state.activePlanId;
+    const progress = getProgressRatio(plan);
+    html += `
+      <div class="plan-card ${active?'selected':''}" style="animation-delay:${i*0.07}s" onclick="selectPlan('${plan.id}')">
+        <div style="display:flex;justify-content:space-between;align-items:start">
+          <div>
+            <div style="font-size:26px;margin-bottom:6px">${plan.emoji}</div>
+            <div class="plan-title">${plan.name}</div>
+          </div>
+          ${active ? '<span class="badge badge-active">✓ Actif</span>' : ''}
+        </div>
+        <p class="plan-desc" style="margin-top:6px">${plan.desc}</p>
+        <div class="plan-meta">${plan.tags.map(t=>`<span class="plan-tag">${t}</span>`).join('')}</div>
+        ${active && plan.chapters ? `
+          <div style="margin-top:14px">
+            <div class="progress-wrap">
+              <div class="progress-bar" style="width:${(progress*100).toFixed(1)}%"></div>
+            </div>
+            <div style="font-size:11px;color:var(--text-muted);margin-top:5px">${(progress*100).toFixed(1)}% terminé</div>
+          </div>` : ''}
+      </div>`;
+  });
+  el.innerHTML = html;
+}
+
+// ════════════════════════════════════════════════
+// RENDU — PROGRESSION
+// ════════════════════════════════════════════════
+function renderProgress() {
+  const el = document.getElementById('progress-content');
+  const plan = getActivePlan();
+
+  if (!plan) {
+    el.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">📊</div>
+        <h3>Pas encore de données</h3>
+        <p>Sélectionnez un plan de lecture pour suivre votre progression livre par livre.</p>
+      </div>`;
+    return;
+  }
+
+  const dayIdx   = getDayIndex();
+  const progress = getProgressRatio(plan);
+  const comp     = state.completed[plan.id] || {};
+
+  // Chapitres totaux cochés
+  let totalDone = 0;
+  for (const arr of Object.values(comp)) totalDone += arr.length;
+
+  // Jours entièrement complétés
+  let completedDays = 0;
+  for (const [d, arr] of Object.entries(comp)) {
+    const dc = getChaptersForDay(plan, parseInt(d));
+    if (dc && arr.length >= dc.length) completedDays++;
+  }
+
+  let html = `
+    <div class="stats-grid">
+      <div class="stat-card" style="animation-delay:0.05s">
+        <div class="stat-num">${dayIdx + 1}</div>
+        <div class="stat-label">Jour actuel</div>
+      </div>
+      <div class="stat-card" style="animation-delay:0.1s">
+        <div class="stat-num">${totalDone}</div>
+        <div class="stat-label">Chapitres lus</div>
+      </div>
+      <div class="stat-card" style="animation-delay:0.15s">
+        <div class="stat-num">${completedDays}</div>
+        <div class="stat-label">Jours complets</div>
+      </div>
+      <div class="stat-card" style="animation-delay:0.2s">
+        <div class="stat-num">${Math.max(0, plan.totalDays - dayIdx)}</div>
+        <div class="stat-label">Jours restants</div>
+      </div>
+    </div>
+
+    <div class="section-title">Avancement global</div>
+    <div class="card" style="animation-delay:0.25s">
+      <div style="display:flex;justify-content:space-between;margin-bottom:10px;align-items:center">
+        <span style="font-family:'Playfair Display',serif;font-size:16px">${plan.name}</span>
+        <span style="color:var(--gold);font-weight:500">${(progress*100).toFixed(1)}%</span>
+      </div>
+      <div class="progress-wrap" style="height:7px;margin-bottom:8px">
+        <div class="progress-bar" style="width:${(progress*100).toFixed(1)}%"></div>
+      </div>
+      <div style="font-size:11.5px;color:var(--text-muted)">
+        ${plan.chapters ? totalDone + ' / ' + plan.chapters.length + ' chapitres' : 'Plan quotidien'}
+      </div>
+    </div>`;
+
+  if (plan.chapters) {
+    // Progression par livre
+    const bookDone  = {};
+    const bookTotal = {};
+    plan.chapters.forEach(ch => {
+      bookTotal[ch.bookId] = (bookTotal[ch.bookId] || 0) + 1;
+    });
+    for (const [d, arr] of Object.entries(comp)) {
+      const dc = getChaptersForDay(plan, parseInt(d));
+      if (!dc) continue;
+      arr.forEach(ci => {
+        const ch = dc[ci];
+        if (ch) bookDone[ch.bookId] = (bookDone[ch.bookId] || 0) + 1;
+      });
+    }
+
+    const planBookIds = [...new Set(plan.chapters.map(c => c.bookId))];
+    html += `<div class="section-title">Progression par livre</div>`;
+    html += `<div class="card" style="animation-delay:0.3s;padding:8px 20px">`;
+    planBookIds.forEach((bid, i) => {
+      const book = BOOKS.find(b => b.id === bid);
+      const done = bookDone[bid] || 0;
+      const tot  = bookTotal[bid] || 1;
+      const pct  = Math.round(done / tot * 100);
+      html += `
+        <div style="padding:10px 0;border-bottom:1px solid var(--border);${i===planBookIds.length-1?'border:none':''}">
+          <div style="display:flex;justify-content:space-between;margin-bottom:6px;align-items:center">
+            <span style="font-size:13px">${book.name}</span>
+            <span style="font-size:11.5px;color:${pct===100?'var(--gold)':'var(--text-muted)'}">
+              ${pct===100 ? '✓ Terminé' : done+'/'+tot}
+            </span>
+          </div>
+          <div class="progress-wrap" style="height:3px">
+            <div class="progress-bar" style="width:${pct}%"></div>
+          </div>
+        </div>`;
+    });
+    html += `</div>`;
+  }
+
+  el.innerHTML = html;
+}
+
+// ════════════════════════════════════════════════
+// RENDU — RÉGLAGES
+// ════════════════════════════════════════════════
+function renderSettings() {
+  const el = document.getElementById('settings-content');
+  const activePlan = getActivePlan();
+
+  el.innerHTML = `
+    <div class="section-title">Source de lecture</div>
+    <div class="card" style="padding:0;overflow:hidden;animation-delay:0.08s">
+      <div class="settings-row">
+        <div>
+          <div class="settings-label">JW.org (navigateur web)</div>
+          <div class="settings-sub">Ouvre chaque chapitre dans votre navigateur</div>
+        </div>
+        <label class="toggle"><input type="checkbox" checked disabled><span class="toggle-slider"></span></label>
+      </div>
+      <div class="settings-row">
+        <div>
+          <div class="settings-label">JW Library (application)</div>
+          <div class="settings-sub">Lien profond vers l'app JW Library</div>
+        </div>
+        <label class="toggle">
+          <input type="checkbox" id="toggle-lib" ${state.openInApp?'checked':''} onchange="state.openInApp=this.checked;saveState()">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+    </div>
+
+    <div class="section-title">Plan de lecture</div>
+    <div class="card" style="padding:0;overflow:hidden;animation-delay:0.12s">
+      <div class="settings-row">
+        <div>
+          <div class="settings-label">Plan actif</div>
+          <div class="settings-sub">${activePlan ? activePlan.name : 'Aucun'}</div>
+        </div>
+        <button class="btn-outline" style="padding:6px 14px;font-size:13px" onclick="showScreen('plans')">Changer</button>
+      </div>
+      <div class="settings-row">
+        <div>
+          <div class="settings-label">Date de début</div>
+          <div class="settings-sub">${state.startDate || 'Non définie'}</div>
+        </div>
+        <button class="btn-outline" style="padding:6px 14px;font-size:13px" onclick="resetStartDate()">Aujourd'hui</button>
+      </div>
+    </div>
+
+    <div class="section-title">Liens JW.org</div>
+    <div class="card" style="padding:0;overflow:hidden;animation-delay:0.16s">
+      <div class="settings-row">
+        <div class="settings-label">Bible en ligne (NWT)</div>
+        <a href="https://www.jw.org/fr/bibliothèque/bible/bible-d-etude/livres/" target="_blank" class="settings-value">Ouvrir →</a>
+      </div>
+      <div class="settings-row">
+        <div class="settings-label">Thème du jour</div>
+        <a href="https://www.jw.org/fr/" target="_blank" class="settings-value">Ouvrir →</a>
+      </div>
+      <div class="settings-row">
+        <div class="settings-label">Télécharger JW Library</div>
+        <a href="https://www.jw.org/fr/tjr-library/" target="_blank" class="settings-value">Télécharger →</a>
+      </div>
+      <div class="settings-row">
+        <div class="settings-label">JW.org — Accueil</div>
+        <a href="https://www.jw.org/fr/" target="_blank" class="settings-value">Ouvrir →</a>
+      </div>
+    </div>
+
+    <div class="section-title">Données</div>
+    <div class="card" style="padding:0;overflow:hidden;animation-delay:0.2s">
+      <div class="settings-row">
+        <div>
+          <div class="settings-label" style="color:var(--text-muted)">Réinitialiser toutes les données</div>
+          <div class="settings-sub">Supprime la progression et les paramètres</div>
+        </div>
+        <button class="btn-outline" style="padding:6px 14px;font-size:13px;color:#e05555;border-color:rgba(224,85,85,0.4)" onclick="resetAll()">Effacer</button>
+      </div>
+    </div>
+
+    <div style="text-align:center;padding:28px 16px;color:var(--text-dim);font-size:12px;line-height:1.8">
+      Bible Trainer JW · v1.0.0<br>
+      Données stockées localement sur votre appareil<br>
+      <a href="https://www.jw.org" target="_blank" style="color:var(--gold-dim);text-decoration:none">jw.org</a>
+    </div>`;
+}
+
+function resetStartDate() {
+  if (confirm('Réinitialiser la date de départ à aujourd\'hui ?')) {
+    state.startDate = new Date().toISOString().slice(0, 10);
+    saveState();
+    renderSettings();
+    renderHome();
+  }
+}
+function resetAll() {
+  if (confirm('Effacer toutes les données ? Cette action est irréversible.')) {
+    localStorage.removeItem('bibletrainer_v1');
+    state = {activePlanId:null, startDate:null, openInApp:false, completed:{}};
+    renderAll();
+    showScreen('home');
+  }
+}
+
+// ════════════════════════════════════════════════
+// NAVIGATION
+// ════════════════════════════════════════════════
+const SCREENS = ['home','plans','progress','settings'];
+
+function showScreen(name) {
+  SCREENS.forEach(s => {
+    document.getElementById('screen-'+s).classList.toggle('active', s === name);
+    document.getElementById('nav-'+s).classList.toggle('active', s === name);
+  });
+}
+
+function renderAll() {
+  renderHome();
+  renderPlans();
+  renderProgress();
+  renderSettings();
+}
+
+// ════════════════════════════════════════════════
+// DÉMARRAGE
+// ════════════════════════════════════════════════
+loadState();
+renderAll();
+</script>
+</body>
+</html>
